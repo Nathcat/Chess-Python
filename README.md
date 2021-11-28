@@ -14,6 +14,8 @@ ChessEngine example usage
 
 
 from ChessEngine import *  # Import the ChessEngine script
+import os
+import platform
 
 
 def ask_exit():
