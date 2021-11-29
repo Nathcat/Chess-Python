@@ -5,6 +5,8 @@ Created by Nathcat 2021
 
 Below is an example usage of the ChessEngine
 
+Note that the default interface is text based, and the engine uses ANSI escape codes to colour text, different terminal applications may interpret these codes differently, so the colours may not appear as expected. For reference, white should be at the top, black should be at the bottom, and messages should appear in red.
+
 ```Python
 """
 ChessEngine example usage
