@@ -8,34 +8,77 @@ Author: Nathan "Nathcat" Baines
 
 
 class NoSuchPieceException(BaseException):
+    """
+    This Exception is thrown whenever a piece cannot be found in the given
+    position.
+    """
     def __str__(self):
+        """
+        Called when the class is cast to a string
+        :return: Error message
+        """
         return "The selected piece does not exist"
 
 
-class Vector:  # A Vector class to represent positions/movements
+class Vector:
+    """
+    A Vector class to represent locations on the board, and movements
+    of pieces.
+    """
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
 
     def __mul__(self, a):
+        """
+        :param a: The coefficient to multiply by (float/integer)
+        :return: The result of the multiplication
+        """
         return Vector(self.x * a, self.y * a)
 
     def __add__(self, a):
+        """
+        :param a: The Vector value to add to this Vector
+        :return: The result of the addition
+        """
         return Vector(self.x + a.x, self.y + a.y)
 
     def __truediv__(self, a):
+        """
+        :param a: The float/integer value to divide by
+        :return: The result of the division
+        """
         return Vector(self.x / a, self.y / a)
 
     def __sub__(self, a):
+        """
+        :param a: The Vector value to subtract from this Vector
+        :return: The result of the subtraction
+        """
         return Vector(self.x - a.x, self.y - a.y)
 
     def __str__(self):
+        """
+        Called when this class is cast to a string
+        :return: A Coordinate representation of this Vector ie: (x, y)
+        """
         return f"({self.x}, {self.y})"
 
     def __eq__(self, a):
+        """
+        :param a: The Vector to test
+        :return: Whether or not this Vector and Vector a are equal
+        """
         return self.x == a.x and self.y == a.y
 
     def __getitem__(self, index):
+        """
+        x and y values may be obtained from a Vector with the use of a list index,
+        if 0, return x, if 1, return y.
+
+        :param index: The index requested
+        :return: The x or y value, depending on the given index, or IndexError
+        """
         if index == 0:
             return self.x
 
@@ -46,10 +89,17 @@ class Vector:  # A Vector class to represent positions/movements
             raise IndexError()
 
     def is_out_of_bounds(self):
+        """
+        Test if this Vector is outside the boundary of the Chess board
+        :return: A boolean determining whether or not this Vector is outside the boundary of the chess board
+        """
         return self.x >= 8 or self.x <= -1 or self.y >= 8 or self.y <= -1
 
 
-class Piece:  # Piece parent class
+class Piece:
+    """
+    A parent class for all pieces.
+    """
     def __init__(self, index, name, side, position, moves, attacks):
         self.name = name
         self.side = side
@@ -59,6 +109,14 @@ class Piece:  # Piece parent class
         self.index = index
 
     def move(self, position, pieces, engine):
+        """
+        Try to move this piece to a new location.
+
+        :param position: The position this piece should try to move to.
+        :param pieces: A list of all pieces on the board.
+        :param engine: The ChessEngine class managing the game.
+        :return: True/False, depending on whether or not the move was executed.
+        """
         if not engine.in_check:
             legal_moves = self.get_legal_moves(pieces, engine)
             if position in legal_moves:
@@ -76,7 +134,15 @@ class Piece:  # Piece parent class
             else:
                 return False
 
-    def attack(self, position, attacked_piece, pieces, engine):
+    def attack(self, position, attacked_piece, engine):
+        """
+        Attempt to attack a piece.
+
+        :param position: The position this piece should move to.
+        :param attacked_piece: The piece this move would attack
+        :param engine: The ChessEngine managing the game
+        :return: True/False, depending on whether or not the move was successful
+        """
         if not engine.in_check:
             legal_attacks = self.get_legal_attacks(False, engine)
             if position in legal_attacks and attacked_piece.side != self.side:
@@ -95,6 +161,13 @@ class Piece:  # Piece parent class
                 return False
 
     def get_legal_moves(self, pieces, engine):
+        """
+        Get all the legal moves for this piece in the current game state.
+
+        :param pieces: A list of all pieces on the board.
+        :param engine: The ChessEngine managing the game.
+        :return: A list of possible moves this piece could make.
+        """
         legal_moves = []
         for move_set in self.moves:
             for move in move_set:
@@ -126,6 +199,13 @@ class Piece:  # Piece parent class
         return legal_moves
 
     def get_legal_check_moves(self, pieces, engine):
+        """
+        Get all the legal moves of this piece, given that the king is in check.
+
+        :param pieces: A list of all pieces on the board.
+        :param engine: The ChessEngine managing the game.
+        :return: A list of possible moves for this piece.
+        """
         moves = []
 
         for move in self.get_legal_moves(pieces, engine):
@@ -142,6 +222,13 @@ class Piece:  # Piece parent class
         return moves
 
     def get_legal_attacks(self, friendly_fire, engine):
+        """
+        Get all the legal attacks this piece can make in the current game state.
+
+        :param friendly_fire: Whether or not attacks on this pieces teammates should be included.
+        :param engine: The ChessEngine managing the game.
+        :return: A list of possible attacks for this piece.
+        """
         legal_attacks = []
 
         for attack_set in self.attacks:
@@ -161,6 +248,12 @@ class Piece:  # Piece parent class
         return legal_attacks
 
     def get_legal_check_attacks(self, engine):
+        """
+        Get all the possible attacks this piece can make, given that the king is in check.
+
+        :param engine: The ChessEngine managing the game.
+        :return: A list of possible attacks for this piece.
+        """
         attacks = []
 
         for threat in engine.threats:
@@ -171,6 +264,11 @@ class Piece:  # Piece parent class
         return attacks
 
     def __str__(self):
+        """
+        Cast this piece to a string.
+
+        :return: A string representation of this piece with coloured text.
+        """
         colour = ""
         if self.side == 0:
             colour = "\u001b[30m"
@@ -181,8 +279,18 @@ class Piece:  # Piece parent class
         return f"{colour}{self.name}\u001b[0m"
 
 
-class Pawn(Piece):  # Pawn subclass
+class Pawn(Piece):
+    """
+    Class representing the Pawn piece
+    """
     def __init__(self, index, side, position):
+        """
+        __init__
+
+        :param index: A unique identifier for this individual piece.
+        :param side: The side this piece is on.
+        :param position: The starting position of this piece.
+        """
         direction = 1
         if side == 1:
             direction = -1
@@ -205,6 +313,14 @@ class Pawn(Piece):  # Pawn subclass
                          ])
 
     def move(self, position, pieces, engine):
+        """
+        The Pawn should override the move function, as its moves can change.
+
+        :param position: The position this piece should try to move to.
+        :param pieces: A list of pieces on the board.
+        :param engine: The ChessEngine managing the game.
+        :return: Whether or not the move was successful.
+        """
         direction = 1
         if self.side == 1:
             direction = -1
@@ -218,7 +334,17 @@ class Pawn(Piece):  # Pawn subclass
 
 
 class Rook(Piece):
+    """
+    A class representing the Rook piece
+    """
     def __init__(self, index, side, position):
+        """
+        __init__
+
+        :param index: A unique identifier for this individual piece.
+        :param side: The side this piece is on.
+        :param position: The starting position of this piece.
+        """
         moves = [
             [
                 Vector(-1, 0),
@@ -265,7 +391,17 @@ class Rook(Piece):
 
 
 class Bishop(Piece):
+    """
+    A class representing the Bishop piece.
+    """
     def __init__(self, index, side, position):
+        """
+        __init__
+
+        :param index: A unique identifier for this individual piece.
+        :param side: The side this piece is on.
+        :param position: The starting position of this piece.
+        """
         moves = [
             [
                 Vector(1, 1),
@@ -312,7 +448,17 @@ class Bishop(Piece):
 
 
 class Knight(Piece):
+    """
+    A class representing the Knight piece.
+    """
     def __init__(self, index, side, position):
+        """
+        __init__
+
+        :param index: A unique identifier for this individual piece.
+        :param side: The side this piece is on.
+        :param position: The starting position of this piece.
+        """
         moves = [
             [Vector(1, 2)],
             [Vector(2, 1)],
@@ -328,7 +474,17 @@ class Knight(Piece):
 
 
 class Queen(Piece):
+    """
+    A class representing the Queen piece
+    """
     def __init__(self, index, side, position):
+        """
+        __init__
+
+        :param index: A unique identifier for this individual piece.
+        :param side: The side this piece is on.
+        :param position: The starting position of this piece.
+        """
         moves = [
             [
                 Vector(1, 1),
@@ -415,7 +571,17 @@ class Queen(Piece):
 
 
 class King(Piece):
+    """
+    A class representing the King piece
+    """
     def __init__(self, index, side, position):
+        """
+        __init__
+
+        :param index: A unique identifier for this individual piece.
+        :param side: The side this piece is on.
+        :param position: The starting position of this piece.
+        """
         moves = [
             [Vector(-1, 1)],
             [Vector(0, 1)],
@@ -430,6 +596,12 @@ class King(Piece):
         super().__init__(index, "Ki", side, position, moves, moves)
 
     def get_legal_check_attacks(self, engine):
+        """
+        The King has different conditions for being able to attack under check.
+
+        :param engine: The ChessEngine managing the game.
+        :return: A list of possible attacks for this piece
+        """
         attacks = []
 
         for threat in engine.threats:
@@ -453,10 +625,16 @@ class King(Piece):
 
 
 class TurnCounter:
+    """
+    A class to keep track of which player's turn it is
+    """
     def __init__(self):
         self.turn = 0
 
     def toggle(self):
+        """
+        Toggle the current player
+        """
         if self.turn == 0:
             self.turn = 1
 
@@ -465,7 +643,15 @@ class TurnCounter:
 
 
 class FrontEnd:
+    """
+    The FrontEnd class is used to create an interface between the player and the ChessEngine.
+    """
     def render(self, pieces):
+        """
+        Render the chess board, by default this is text based.
+
+        :param pieces: A list of pieces on the board.
+        """
         board = []
         for y in range(0, 8):
             board.append([])
@@ -492,7 +678,13 @@ class FrontEnd:
 
 
 class ChessEngine:
+    """
+    The ChessEngine class manages the Chess game itself.
+    """
     def __init__(self):
+        """
+        __init__
+        """
         self.pieces = [
             Pawn(0, 0, Vector(0, 1)),
             Pawn(1, 0, Vector(1, 1)),
@@ -531,9 +723,15 @@ class ChessEngine:
         self.turn_counter = TurnCounter()
         self.in_check = False
         self.checkmate = False
-        self.threats = []
+        self.threats = []  # Threats to the king
 
     def get_piece_by_position(self, position):
+        """
+        Try to find a piece at a given location.
+
+        :param position: The location to search for a piece at.
+        :return: The piece that was found, or None if none were found.
+        """
         position = Vector(position[0], position[1])
         selected_piece = None
 
@@ -545,6 +743,14 @@ class ChessEngine:
         return selected_piece
 
     def get_legal_moves(self, position):
+        """
+        Get all the legal moves for the given piece.
+
+        :param position: list/Vector/Piece, for any of the given types, this will be used to determine the selected
+        piece, the process of determining the selected piece is as follows: list -> Vector -> Piece, this can start from
+        any point in that process.
+        :return: Two lists, one of possible moves, and one of possible attacks.
+        """
         if isinstance(position, list):
             position = Vector(position[0], position[1])
 
@@ -571,6 +777,13 @@ class ChessEngine:
         return moves, attacks
 
     def get_threats(self, index, position):
+        """
+        Get all the given threats to a location, excluding the piece identified with index.
+
+        :param index: The index of the piece to ignore.
+        :param position: The position to check.
+        :return: A list of pieces threatening the given location.
+        """
         threats = []
         for piece in self.pieces:
             if piece.index == index:
@@ -582,6 +795,9 @@ class ChessEngine:
         return threats
 
     def check_for_check(self):
+        """
+        Check if the king is in check.
+        """
         king = None
         for piece in self.pieces:
             if piece.name == "Ki" and piece.side == self.turn_counter.turn:
@@ -610,6 +826,9 @@ class ChessEngine:
             self.threats = []
 
     def check_for_checkmate(self):
+        """
+        Check if the king is in checkmate.
+        """
         number_of_moves = 0
         for piece in self.pieces:
             if piece.side == self.turn_counter.turn:
@@ -619,6 +838,13 @@ class ChessEngine:
         self.checkmate = number_of_moves == 0
 
     def move_piece(self, selection, new_position):
+        """
+        Try to move the selected piece to the given position.
+
+        :param selection: The coordinate of the selected piece (list).
+        :param new_position: The position to try and move the piece to (list).
+        :return: Whether or not this move was successful, and an error message, if applicable.
+        """
         position = Vector(selection[0], selection[1])
         selected_piece = self.get_piece_by_position(position)
 
@@ -640,7 +866,7 @@ class ChessEngine:
                 return result, None
 
             else:
-                result = selected_piece.attack(new_position, attacked_piece, self.pieces, self)
+                result = selected_piece.attack(new_position, attacked_piece, self)
                 if result:
                     for x in range(0, len(self.pieces)):
                         if self.pieces[x].index == attacked_piece.index:
