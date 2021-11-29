@@ -5,8 +5,6 @@ A Chess engine program written in Python.
 
 Author: Nathan "Nathcat" Baines
 """
-import os
-import platform
 
 
 class NoSuchPieceException(BaseException):
@@ -62,7 +60,7 @@ class Piece:  # Piece parent class
 
     def move(self, position, pieces, engine):
         if not engine.in_check:
-            legal_moves = self.get_legal_moves(pieces)
+            legal_moves = self.get_legal_moves(pieces, engine)
             if position in legal_moves:
                 self.position = position
 
@@ -96,7 +94,7 @@ class Piece:  # Piece parent class
             else:
                 return False
 
-    def get_legal_moves(self, pieces):
+    def get_legal_moves(self, pieces, engine):
         legal_moves = []
         for move_set in self.moves:
             for move in move_set:
@@ -112,6 +110,13 @@ class Piece:  # Piece parent class
                 if (self.position + move).is_out_of_bounds():
                     valid = False
 
+                old_position = Vector(self.position.x, self.position.y)
+                self.position += move
+                engine.check_for_check()
+                valid = not engine.in_check
+                self.position = old_position
+                engine.check_for_check()
+
                 if valid:
                     legal_moves.append(self.position + move)
 
@@ -123,13 +128,13 @@ class Piece:  # Piece parent class
     def get_legal_check_moves(self, pieces, engine):
         moves = []
 
-        for move in self.get_legal_moves(pieces):
+        for move in self.get_legal_moves(pieces, engine):
             old_position = Vector(self.position.x, self.position.y)
             self.position = move
             engine.check_for_check()
             self.position = old_position
 
-            if not engine.in_check:
+            if not engine.in_check and not move.is_out_of_bounds() and engine.get_piece_by_position(move) is None:
                 moves.append(move)
 
             engine.check_for_check()
@@ -556,7 +561,7 @@ class ChessEngine:
         attacks = None
 
         if not self.in_check:
-            moves = selected_piece.get_legal_moves(self.pieces)
+            moves = selected_piece.get_legal_moves(self.pieces, self)
             attacks = selected_piece.get_legal_attacks(False, self)
 
         else:
