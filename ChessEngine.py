@@ -332,6 +332,25 @@ class Pawn(Piece):
 
         return result
 
+    def should_promote(self):
+        """
+        Determine whether or not this Pawn should be allowed to promote.
+
+        :return: True/False, depending on whether or not the Pawn is in a position to promote.
+        """
+        direction = 1
+        if self.side == 1:
+            direction = -1
+
+        if direction == 1 and self.position.y == 7:
+            return True
+
+        elif direction == -1 and self.position.y == 0:
+            return True
+
+        else:
+            return False
+
 
 class Rook(Piece):
     """
@@ -872,6 +891,11 @@ class ChessEngine:
                         if self.pieces[x].index == attacked_piece.index:
                             del self.pieces[x]
                             break
+
+        for x in range(0, len(self.pieces)):
+            if isinstance(self.pieces[x], Pawn):
+                if self.pieces[x].should_promote():
+                    self.pieces[x] = Queen(self.pieces[x].index, self.pieces[x].side, self.pieces[x].position)
 
         if result:
             self.turn_counter.toggle()
